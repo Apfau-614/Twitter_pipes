@@ -304,7 +304,7 @@ Rewrite the `pretty_print` file so that it uses this method:
 #!/usr/bin/env python3
 import json, sys
 file = sys.stdin
-data = file.readlines()[0]    # only this line changes
+data = next(file)
 obj  = json.loads(data)
 print(json.dumps(obj, indent=4))
 ```

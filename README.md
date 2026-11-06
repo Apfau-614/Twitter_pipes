@@ -126,8 +126,8 @@ In this case, we'll need to use `grep` to filter the output of `ls` to keep only
 > Write a one line shell command that returns the number of days worth of data (i.e. the number of zip files) in the twitter dataset.
 > Edit the code block below with your command and its output
 > ```
-> $ #place command here
-> place output here
+> $ ls '/data/Twitter dataset' | grep 'zip$' | wc -l
+> 1887
 > ```
 
 ## Part 2: Counting the Tweets
@@ -304,7 +304,7 @@ Rewrite the `pretty_print` file so that it uses this method:
 #!/usr/bin/env python3
 import json, sys
 file = sys.stdin
-data = file.readlines()[0]    # only this line changes
+data = next(file)
 obj  = json.loads(data)
 print(json.dumps(obj, indent=4))
 ```

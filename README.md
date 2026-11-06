@@ -432,15 +432,15 @@ Notice that many of these tweets are in non-English languages.
 > ```
 > $ unzip -p '/data/Twitter dataset/geoTwitter20-01-01.zip' | head -n10 | jq '.["place"]["full_name"]'
 > "Houston, TX"
-"Mashonaland East, Zimbabwe"
-"Bogotá, D.C., Colombia"
-"Roma, Lazio"
-"Credenhill, England"
-"Neptune Beach, FL"
-null
-"Puerto Vallarta, Jalisco"
-"Newport News, VA"
-"Puerto Vallarta, Jalisco"
+>"Mashonaland East, Zimbabwe"
+>"Bogotá, D.C., Colombia"
+>"Roma, Lazio"
+>"Credenhill, England"
+>"Neptune Beach, FL"
+>null
+>"Puerto Vallarta, Jalisco"
+>"Newport News, VA"
+>"Puerto Vallarta, Jalisco"
 > ```
 
 # Part 5: Interesting queries

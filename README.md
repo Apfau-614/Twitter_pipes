@@ -1,12 +1,31 @@
 # Pipe lab
 
 This lab will introduce you the Unix `|` (pronounced "pipe") operator.
-You will use the pipe to do basic analysis of a large twitter dataset.
+The `|` is similar in spirit to python generators:
+it allows us to write programs that us a constant $O(1)$ amount of memory instead of $O(n)$.
+Because pipes are efficient, they are commonly used in large scale data analysis pipelines (whence the name).
 
-(There is no need to work with a partner on this lab,
-but you are of course encouraged to do so.)
+In this lab, you will use the pipe to do basic analysis of a large twitter dataset.
 
 <img src=img/meme.jpg width=400px />
+
+## Part -1: Setup
+
+You will need a partner to complete this lab.
+
+Create a new github repo.
+Then put the contents of this lab into your new repo:
+```
+$ git clone origin <your_url>
+$ cd <your_repo>
+$ git remote add upstream https://github.com/mikeizbicki/lab-pipes-twitter
+$ git pull upstream master
+$ git push origin master
+```
+
+Fork your partner's repo,
+then do the work in your partner's repo.
+You will have to create a pull request later in the lab.
 
 ## Part 0: Measuring the Dataset
 
@@ -15,7 +34,9 @@ Run the following command to see the size of the dataset
 ```
 $ du -h '/data/Twitter dataset/'
 ```
-The `T` in the output stands for [terabytes](https://en.wikipedia.org/wiki/Byte#Multiple-byte_units), which equals 1000 gigabytes, or $10^9$ bytes.
+The command `du` stands for "disk usage" and `-h` stands for "human readable output".
+The `T` in the output stands for [terabytes](https://en.wikipedia.org/wiki/Byte#Multiple-byte_units),
+which equals 1000 gigabytes, or $10^9$ bytes.
 Over the next few labs and homeworks,
 we will practice techniques for working with these large datasets.
 
@@ -29,7 +50,51 @@ we will practice techniques for working with these large datasets.
 ## Part 1: Counting the Files
 
 The first step in getting familiar with a new dataset is just to count how many files there are.
-We can easily do that by combining our knowledge of the `ls`, `wc`, and `|` commands:
+The standard way to "count" things in the shell is with the `wc` command (which stands for "word count").
+Observe that we cannot run the `wc` command on a directory:
+```
+$ wc '/data/Twitter dataset'
+wc: '/data/Twitter dataset': Is a directory
+      0       0       0 /data/Twitter dataset
+```
+Essentially all shell commands take their input on *stdin* (short for "standard input" and pronounced "standard in").
+Stdin is normally the keyboard, but the shell can redirect the input to other locations.
+For example, we can use heredocs to redirect the input:
+```
+$ wc <<EOF
+> this
+> is
+> a
+> test
+> EOF
+      4       4      15
+```
+> **NOTE:**
+> In the command above, `$` is the main prompt and indicates that everything typed afterward is a command.
+> `>` is a secondary prompt that indicates that this line is still part of the previous command.
+> The line
+> ```
+>      4       4      15
+> ```
+> has no prompt and so this is the output of the command.
+
+By default, `wc` prints out the number of lines, words, and characters in the input stream.
+It is common to add the `-l` flag to only print the number of lines.
+Observe:
+```
+$ wc -l <<EOF
+> this
+> is
+> a
+> test
+> EOF
+4
+```
+
+Pipes are a way to connect to programs together.
+Recall that the `ls` command will print the contents of a directory,
+and so if we count the number of lines, we will count the number of files in the directory.
+Connecting ls to pipe like follows gives us the total number of files in our dataset:
 ```
 $ ls '/data/Twitter dataset' | wc -l
 ```
@@ -47,7 +112,9 @@ and outputs only those lines that match the regular expression.
 In this case, the `$` indicates the end of a line,
 and so `grep` will only print those files that end with the letters `txt`.
 
-If you read through these files, you will discover that:
+These two readme files describe how the dataset is structured.
+You're not required to view them,
+but they explain that:
 The data is partitioned into zip files,
 where each zip file corresponds to a single day of tweets.
 Our next task is to discover how many days worth of data the dataset contains.
@@ -55,14 +122,13 @@ Our next task is to discover how many days worth of data the dataset contains.
 Once again, we can answer this question easily with our shell commands.
 In this case, we'll need to use `grep` to filter the output of `ls` to keep only files that end in `zip`, then use `wc` to count the results.
 
-**Exercise 1:**
-Write a one line shell command that returns the number of days worth of data (i.e. the number of zip files) in the twitter dataset.
-There is no need to turn anything in for this problem,
-and you can find a solution in the comments of this README.
-<!--
-$ ls '/data/Twitter dataset' | grep 'zip$' | wc -l
-Your command doesn't have to exactly match that, but you should get 1887 as your answer.
--->
+> **Exercise 1:**
+> Write a one line shell command that returns the number of days worth of data (i.e. the number of zip files) in the twitter dataset.
+> Edit the code block below with your command and its output
+> ```
+> $ #place command here
+> place output here
+> ```
 
 ## Part 2: Counting the Tweets
 
@@ -92,7 +158,25 @@ $ unzip -p '/data/Twitter dataset/geoTwitter20-01-01.zip'
 ```
 If you run the command above, you will see a LOT of information printed to the screen,
 and it will take more than an hour to finish.
+(All of this runtime is in the screen printing, which is very slow.)
 Stop the command by pressing CTRL-C on your keyboard.
+
+> **ASIDE:**
+> When you press CTRL-C, you will see the character sequence `^C` printed to the terminal.
+> The `^` on the terminal is how the CTRL key is represented,
+> and so people will sometimes write `^C` instead of CTRL-C.
+> Technically, what's happening when you press CTRL-C is that your terminal is sending a special ASCII character to the shell called the [End of Text (ETX)](https://en.wikipedia.org/wiki/End-of-Text_character).
+> This is a non-printable character in the ASCII table that doesn't have a key on the keyboard,
+> but the CTRL key lets you send non-printable ASCII characters.
+> The shell running on the lambda server is never aware that you've pressed the CTRL key.
+>
+> This is called [caret notation](https://en.wikipedia.org/wiki/Caret_notation), and the use of carat notation is commonly used in programming circles to make jokes like the following:
+> ```
+> The AVLTree assignment totally sucks^h^h^h^h^hrules.
+> ```
+> The CTRL-h command is equivalent to the backspace character.
+> (Very old keyboards didn't have a backspace character,
+> and programmers had to type CTRL-h to delete a letter.)
 
 For commands with a lot of output, it is common to want to inspect only the first few lines of the output.
 The `head` command lets us do just that.
@@ -112,10 +196,6 @@ $ unzip -p '/data/Twitter dataset/geoTwitter20-01-01.zip' | wc -l
 ```
 Unfortunately, the file is so large that just looping over it and counting the number of lines takes a long time.
 For me, it takes about 80 seconds when no one else is on the lambda server.
-With other people on the lambda server trying to access the same file,
-this could take a few minutes.
-You don't have to let this command run until completion,
-and you can press CTRL-C to end it early.
 
 > **ASIDE:**
 > If you let the command above run to completion, you'd see that there are about 4 million (or exactly 3930907) tweets in the file.
@@ -138,6 +218,15 @@ We can use the `|` operator combined with the `echo` and `python3` commands to c
 $ echo "print(1887*80/60/60)" | python3
 41.93333333333333
 ```
+> **NOTE:**
+> We could rewrite the above to use a heredoc like:
+> ```
+> $ python3 <<EOF
+> print(1887*80/60/60)
+> EOF
+> ```
+> You will commonly see people use both techniques.
+
 Based on this output, we can predict that it will take about 42 hours just to loop over the dataset!
 Because looping has a runtime of $\Theta(n)$,
 we can estimate that an algorithm with runtime $\Theta(n^2)$ would take time $42*42=1764$ hours, or 73 days to complete.
@@ -158,22 +247,135 @@ $ unzip -p '/data/Twitter dataset/geoTwitter20-01-01.zip' | head -n1
 ```
 The output, however, is hard to read.
 In order to save disk space, whitespace has been removed from the tweet's JSON object.
-Fortunately, python has a built in module for "pretty printing" JSON called `json.tool`.
-We can access it by piping the output of the above command into the python module:
+
+In this section, we will use python to pretty print the tweets for us.
+
+### 3a: inspect.py
+
+The repo contains a command `pretty_print` that lets us visualize json objects nicely.
+Run it:
+```
+$ echo '{"text": "hi", "user": {"screen_name": "a"}}' | ./pretty_print
+{
+    "text": "hi",
+    "user": {
+        "screen_name": "a"
+    }
+}
+```
+Observe that this command takes unformatted json as input and then pretty prints in with nice formatting that makes the structure obvious.
+
+Now lets look at the contents of the `pretty_print` command:
+```
+$ cat pretty_print
+#!/usr/bin/env python3
+import json, sys
+file = sys.stdin
+data = file.read()
+obj  = json.loads(data)
+print(json.dumps(obj, indent=4))
+```
+Internally, the command is just python!
+
+> **NOTE:**
+> It is a *human* convention that python files end in `.py`.
+> But *computers* do not care about the names of files,
+> just like they do not care about the names of variables.
+> What tells the computer to run this command using python instead of a different programming language is the *shebang* `#!` in the first line of the file.
+
+The shell redirection operators like `|` work with *all* programs written in *any* programming language.
+When working in python, you don't have to do anything special to make your programs support piping,
+and it is very common in data science to combine the shell and python.
+
+Now lets use the pretty print command above to inspect the format of our zip file.
+We will pipe the contents into the `pretty_print` function.
+```
+$ unzip -p '/data/Twitter dataset/geoTwitter20-01-01.zip' | ./pretty_print
+```
+The command above should run for about a minute and then raise `MemoryError` :(
+
+The problem is that the `.read()` method loads the entire file into memory (and therefore uses $\Theta(n)$ memory for a file of size $n$).
+This exceeds the amount of memory you are allowed to use (you can use "only" 5gb of memory at a time and the uncompressed filesize is 6gb).
+
+In order to work with this large dataset, we need to use an $O(1)$ memory algorithm---and that means generators.
+Fortunately, every file in python has a generator method `.readlines()` that yields one line of the file at a time.
+Rewrite the `pretty_print` file so that it uses this method:
+```
+#!/usr/bin/env python3
+import json, sys
+file = sys.stdin
+data = file.readlines()[0]    # only this line changes
+obj  = json.loads(data)
+print(json.dumps(obj, indent=4))
+```
+Then run your modified program.
+```
+$ unzip -p '/data/Twitter dataset/geoTwitter20-01-01.zip' | ./pretty_print
+```
+It should actually work!
+By using the generator, you've reduced the memory usage to $O(1)$ and now we can actually visualize the file.
+
+But it is still slow.
+The `.readlines()` generatror loops over every line in the file,
+which means our runtime is still $O(n)$.
+How can we reduce that runtime?
+
+It turns out that every file object in python is also directly a generator that does not read the entire file.
+Therefore, we can call `next` on the `file` object directly to get the next line.
+
+Modify `pretty_print` to replace the `file.readlines()[0]` line with `next(file)`.
+Then rerun the command:
+```
+$ unzip -p '/data/Twitter dataset/geoTwitter20-01-01.zip' | ./pretty_print
+```
+The command should finish instantly and without errors.
+Now you have used generators to reduce both the memory usage and runtime to constant.
+
+> **TAKEAWAY:**
+> Careful use of generators is necessary for analyzing large datasets in python!
+
+> **Exercise 2:**
+> Commit your changes to the repo.
+> Then issue a pull request to your partners repo.
+> For full credit on the lab,
+> You must have a commit from another person that has made the correct changes to the `pretty_print` command.
+
+> **NOTE:**
+> There are two more exercises below.
+> You must commit both of these exercises to your own repo and not to your partners!
+
+### 3b: json.tool
+
+In the previous section we saw how to write our own python code to help visualize the contents of a json file.
+But this is a common task, and python already has a built-in module called `json.tool` for pretty printing json.
+If you run `python3 -m json.tool`, then the stdin will be pretty printed.
+All built-in tools like this are design to be maximally memory and runtime efficient.
+
+The following incantation gets us the prettified output:
 ```
 $ unzip -p '/data/Twitter dataset/geoTwitter20-01-01.zip' | head -n1 | python3 -m json.tool
 ```
-The output looks like a python dictionary.
+Observe that we use the `head -n1` command to extract only a single json object before passing to python in this case.
+It is considered "ugly" for one command to do multiple things and good practice to combine tools together.
+(Just like it is considered ugly for one python function to do multiple things and it is better to combine together multiple python functions.)
 
 > **ASIDE:**
-> Technically the output you're looking at is a JavaScript dictionary.
-> (The J in JSON stands for JavaScript.)
-> Conveniently, however, JavaScript and Python have very similar syntaxes,
-> and every valid JSON object is a valid Python object as well.
+> Technically the output you're looking at is a *javascript object*.
+> (JSON stands for *JavaScript Object Notation*, and *object* is the Javascript word for *dictionary*.)
+> Conveniently, however, javascript and python have very similar syntaxes.
+> The main differences are that javascript does not support single quotes `'` and that it lowercases `true` and `false`.
 
 Find the `"text"` key of the JSON dictionary.
-(Notice that I referred to the key as `"text"` and not `text`.
-The content of the string is `text`, but the value of the key is the string literal `"text"`.)
+
+> **NOTE:**
+> Notice that I referred to the key as `"text"` and not `text`.
+> The content of the string is `text`,
+> but the value of the key is the string literal `"text"`.
+> Good programmers pay close attention to these grammatical distinctions,
+> and it is very easy in a technical interview to detect bad programs by their inability to make these grammatical distinctions.
+> If you want the respect of the programming community,
+> you should pay attention to our grammar rules.
+
 This is the actual text of the tweet, and you should see that it is equal to
 ```
 🤘🏾 @ Pappadeaux Seafood Kitchen https://t.co/1oecbjJmP2
@@ -210,7 +412,7 @@ You should see the values of the keys we discussed in the previous section above
 >
 > The syntax can perform incredibly complex queries,
 > but you don't need to know the details of this syntax for this class.
-> Hopefully, the simple queries above are relatively easy to understand.
+> Hopefully, the simple queries above are "obvious".
 
 Let's see one more example using the `jq` command to process multiple tweets at once.
 Recall that the `head -n1` command outputs only the first line of its input and discards everything else.
@@ -223,14 +425,13 @@ $ unzip -p '/data/Twitter dataset/geoTwitter20-01-01.zip' | head -n20 | jq '.["t
 Notice that many of these tweets are in non-English languages.
 (Only about 30% of tweets are English.)
 
-**Exercise 2:**
-Write a one line shell command that returns the name of the location that the first 10 tweets were sent from on 1 April 2020.
-There is no need to turn anything in for this problem,
-and you can find a solution in the comments of this README.
-<!--
-$ unzip -p '/data/Twitter dataset/geoTwitter20-04-01.zip' | head -n10 | jq '.["place"]["full_name"]'
--->
-
+> **Exercise 3:**
+> Write a one line shell command that returns the name of the location that the first 10 tweets were sent from on 1 April 2020.
+> Edit the code block below with your command and its output
+> ```
+> $ #place command here
+> place output here
+> ```
 
 # Part 5: Interesting queries
 
@@ -260,29 +461,20 @@ $ unzip -p '/data/Twitter dataset/geoTwitter20-04-01.zip' | grep -i "coronavirus
 so it's fine if the text appears inside of a hashtag.
 > Also, I'm not using the `jq` command because I'm just counting the results.
 
+
+> **Exercise 4:**
+> Write a one line shell command that outputs the text of all of the tweets sent from Claremont, CA on 12 March 2020 that mention coronavirus.
+> (This was the last day of in-person classes that semester.)
+> Edit the code block below with your command and its output
+> ```
+> $ #place command here
+> place output here
+> ```
+
 ## Submission
 
-Write a command that outputs the text of all of the tweets sent from Claremont, CA on 12 March 2020 that mention the coronavirus.
-(This was the last day of in-person classes that semester.)
-Upload your command and its output to canvas.
+Upload your repo link to canvas.
 
-
-<!--
-> **ASIDE:**
-> When you press CTRL-C, you will see the character sequence `^C` printed to the terminal.
-> The `^` on the terminal is how the CTRL key is represented,
-> and so people will sometimes write `^C` instead of CTRL-C.
-> Technically, what's happening when you press CTRL-C is that your terminal is sending a special ASCII character to the shell called the [End of Text (ETX)](https://en.wikipedia.org/wiki/End-of-Text_character).
-> This is a non-printable character in the ASCII table that doesn't have a key on the keyboard,
-> but the CTRL key lets you send non-printable ASCII characters.
-> The shell running on the lambda server is never aware that you've pressed the CTRL key.
-> This is called [caret notation](https://en.wikipedia.org/wiki/Caret_notation).
-> ```
-> The BST assignment totally sucks^h^h^h^h^hrules.
-> ```
->
-> The CTRL-h command is equivalent to the backspace character.
-> (Very old keyboards didn't have a backspace character,
-> The wikipedia article on [caret notation]
--->
-
+The answer to Exercise 2 should be committed by your partner,
+and the answer to Exercise 3 and 4 should be committed by you.
+I don't care who committed Exercise 1.

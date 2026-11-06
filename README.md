@@ -429,8 +429,17 @@ Notice that many of these tweets are in non-English languages.
 > Write a one line shell command that returns the name of the location that the first 10 tweets were sent from on 1 April 2020.
 > Edit the code block below with your command and its output
 > ```
-> $ #place command here
-> place output here
+> $ unzip -p '/data/Twitter dataset/geoTwitter20-01-01.zip' | head -n10 | jq '.["place"]["full_name"]'
+> "Houston, TX"
+"Mashonaland East, Zimbabwe"
+"Bogotá, D.C., Colombia"
+"Roma, Lazio"
+"Credenhill, England"
+"Neptune Beach, FL"
+null
+"Puerto Vallarta, Jalisco"
+"Newport News, VA"
+"Puerto Vallarta, Jalisco"
 > ```
 
 # Part 5: Interesting queries

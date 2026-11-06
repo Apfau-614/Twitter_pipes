@@ -1,3 +1,4 @@
+
 # Pipe lab
 
 This lab will introduce you the Unix `|` (pronounced "pipe") operator.
